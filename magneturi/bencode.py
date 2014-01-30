@@ -1,226 +1,384 @@
-# Copyright (C) 2011 by clueless <clueless.nospam ! mail.com>
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-# Version: 20110424
-#
-# Changelog
-# ---------
-# 2011-04-24  - Changed date format to YYYY-MM-DD for versioning, bigger
-#               integer denotes a newer version
-#             - Fixed a bug that would treat False as an integral type but
-#               encode it using the 'False' string, attempting to encode a
-#               boolean now results in an error
-#             - Fixed a bug where an integer value of 0 in a list or
-#               dictionary resulted in a parse error while decoding
-#
-# 2011-04-03  - Original release
+#!/usr/bin/env python3
+"""
+py3bencode is a new GPL-licensed Bencode module developed for Python 3.
 
-_TYPE_INT        = 1
-_TYPE_STRING     = 2
-_TYPE_LIST       = 3
-_TYPE_DICTIONARY = 4
-_TYPE_END        = 5
-_TYPE_INVALID    = 6
+= Motivation =
 
-# Function to determine the type of he next value/item
-#   Arguments:
-#       char        First character of the string that is to be decoded
-#   Return value:
-#       Returns an integer that describes what type the next value/item is
-def _gettype(char):
-    if char == 0x6C:                        # 'l'
-        return _TYPE_LIST
-    elif char == 0x64:                      # 'd'
-        return _TYPE_DICTIONARY
-    elif char == 0x69:                      # 'i'
-        return _TYPE_INT 
-    elif char == 0x65:                      # 'e'
-        return _TYPE_END
-    elif char >= 0x30 and char <= 0x39:     # '0' '9'
-        return _TYPE_STRING
-    else:
-        return _TYPE_INVALID
+  There already have been some Bencode modules for Python, but I haven't
+  found any reliable module which works with Python 3 as well.
 
-# Function to parse a string from the bendcoded data
-#   Arguments:
-#       data        bencoded data, must be guaranteed to be a string
-#   Return Value:
-#       Returns a tuple, the first member of the tuple is the parsed string
-#       The second member is whatever remains of the bencoded data so it can
-#       be used to parse the next part of the data
-def _decode_string(data):
-    end = 1
-    while data[end] != 0x3A:    # ':'
-        end = end + 1
-    strlen = int(data[:end])
-    return (data[end+1:strlen+end+1], data[strlen + end+1:])
+  So I created this module from scratch.
 
-# Function to parse an integer from the bencoded data
-#   Arguments:
-#       data        bencoded data, must be guaranteed to be an integer
-#   Return Value:
-#       Returns a tuple, the first member of the tuple is the parsed string
-#       The second member is whatever remains of the bencoded data so it can
-#       be used to parse the next part of the data
-def _decode_int(data):
-    end = 1
-    while data[end] != 0x65:     # 'e'
-        end = end + 1
-    return (int(data[1:end]), data[end+1:])
 
-# Function to parse a bencoded list
-#   Arguments:
-#       data        bencoded data, must be guaranted to be the start of a list
-#   Return Value:
-#       Returns a tuple, the first member of the tuple is the parsed list
-#       The second member is whatever remains of the bencoded data so it can
-#       be used to parse the next part of the data
-def _decode_list(data):
-    x = []
-    overflow = data[1:]
-    while True:                                         # Loop over the data
-        value, overflow = _decode(overflow)             #
-        if isinstance(value, bool) or overflow == '':   # - if we have a parse error
-            return (False, False)                       #     Die with error
-        else:                                           # - Otherwise
-            x.append(value)                             #     add the value to the list
-        if _gettype(overflow[0]) == _TYPE_END:          # - Break if we reach the end of the list
-            return (x, overflow[1:])                    #     and return the list and overflow
+= Version & Changelog =
 
-# Function to parse a bencoded list
-#   Arguments:
-#       data        bencoded data, must be guaranted to be the start of a list
-#   Return Value:
-#       Returns a tuple, the first member of the tuple is the parsed dictionary
-#       The second member is whatever remains of the bencoded data so it can
-#       be used to parse the next part of the data
-def _decode_dict(data):
-    x = {}
-    overflow = data[1:]
-    while True:                                         # Loop over the data
-        if _gettype(overflow[0]) != _TYPE_STRING:       # - If the key is not a string
-            return (False, False)                       #     Die with error
-        key, overflow = _decode(overflow)               #
-        if key == False or overflow == '':              # - If parse error
-            return (False, False)                       #     Die with error
-        value, overflow = _decode(overflow)             #
-        if isinstance(value, bool) or overflow == '':   # - If parse error
-            print("Error parsing value")
-            print(value)
-            print(overflow)
-            return (False, False)                       #     Die with error
+  This is version 1.0 (initial release).
+
+  No changelog so far.
+
+
+= Future =
+
+  Generally it might be useful to provide more specific error messages if
+  anything goes wrong. However, the most common errors are already covered.
+
+
+= Credits =
+
+  Robert Nitsch <r.s.nitsch+dev@gmail.com> - July 2010 (Version 1.0)
+
+
+= License =
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
+def _bytes(_str):
+    """
+    Convert ordinary Python string (utf-8) into bytes object (should be considered
+    as c-string).
+
+    @rtype:   bytes
+    """
+    return bytes(str(_str), "utf-8")
+
+def _str(_bytes):
+    """
+    Attempt to decode bytes object back to ordinary Python string (utf-8).
+
+    Decoding cannot be guaranteed, so be careful.
+
+    @rtype:   str, but will return the original data if it can't be interpreted as utf-8
+    """
+    try:
+        return _bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        return _bytes
+
+def bencode(thing):
+    """
+    bencodes the given object, returning a bytes object
+    containing the bencoded data.
+
+    Allowed object types are:
+    - list (list)
+    - dictionary (dict)
+    - integer (int)
+    - string (str)
+    - bytes object (bytes)
+
+    Note that all strings will be converted to byte objects during the
+    encoding process.
+
+    @rtype:   bytes
+    """
+    if   isinstance(thing, int):
+        return _bytes("i%se" % thing)
+
+    elif isinstance(thing, str):
+        return _bytes(str(len(_bytes(thing))) + ":" + thing)
+
+    elif isinstance(thing, bytes):
+        return _bytes(str(len(thing)) + ":") + thing
+
+    elif isinstance(thing, bytearray):
+        return bencode(bytes(thing))
+
+    elif isinstance(thing, list):
+        return b"l" + b"".join([bencode(i) for i in thing]) + b"e"
+
+    elif isinstance(thing, dict):
+        result = b"d"
+
+        keys = list(thing.keys())
+        keys.sort()
+
+        for key in keys:
+            result += bencode(key) + bencode(thing[key])
+
+        return result + b"e"
+
+    raise TypeError("bencoding objects of type %s not supported" % type(thing))
+
+def bdecode(data, decode_strings=True, strict=False):
+    """
+    Restores/decodes bencoded data. The bencoded data must be given as bytes object.
+
+    Note that all bencode-strings are treated as bytes objects first. Unless
+    decode_strings=False the bdecoder then tries to convert every bytes object
+    to an ordinary Python string, that means: it tries to interpret every
+    bytes object as utf-8 string.
+
+    This behavior is meant to make this module more convenient.
+    Though I strongly recommend to disable the automatic decoding attempts of
+    strings. Your application should know which bencode-strings are meant to
+    be utf-8 and which not.
+
+    The strict parameter enforces additional bencode conventions, these are:
+    - no negative zeroes are allowed for integers
+    - no leading  zeroes are allowed for integers
+
+    strict=False (default) means the decoder will just ignore glitches like that.
+    Please note that a proper encoder will never produce errors like these at all.
+
+    @rtype:   list, dict, int, str or bytes
+    """
+    if not isinstance(data, bytes):
+        raise TypeError("bdecode expects bytes object.")
+
+    return BDecoder(data, decode_strings, strict).decode()
+
+class DecodingException(Exception):
+    """
+    Raised by the decoder on error.
+    """
+    pass
+
+class BDecoder(object):
+    """
+    The decoder itself.
+
+    See bdecode() for how to use it. (Though I recommend not to do so.)
+    """
+    def __init__(self, data, decode_strings, strict):
+        self.data   = data
+        self.pos    = 0
+
+        self.strict         = strict
+        self.decode_strings = decode_strings
+
+    def get_pos_char(self):
+        """
+        Get char (byte) at current position.
+        """
+        _res = self.data[self.pos:self.pos+1]
+
+        # why use slice syntax instead of ordinary random access?
+        # because self.data[some_index] would return a byte,
+        # that is a number between 0-255.
+        #
+        # slice syntax, however, returns e.g. b'A' (instead of 65).
+
+        if len(_res) == 0:
+            raise DecodingException("Unexpected end of data. Unterminated list/dictionary?")
+        return _res
+    pos_char = property(get_pos_char)
+
+    def decode(self):
+        """Decode whatever we find at the current position."""
+        _pos_char  =  self.pos_char
+
+        if   _pos_char == b'i':
+            self.pos  +=  1
+            return self.decode_int()
+        elif _pos_char == b'l':
+            self.pos  +=  1
+            return self.decode_list()
+        elif _pos_char == b'd':
+            self.pos  +=  1
+            return self.decode_dict()
+        elif _pos_char.isdigit():
+            return self.decode_string()
         else:
-            x[key] = value
-        if _gettype(overflow[0]) == _TYPE_END:
-            return (x, overflow[1:])
+            raise DecodingException
 
-#   Arguments:
-#       data        bencoded data in bytes format
-#   Return Values:
-#       Returns a tuple, the first member is the parsed data, could be a string,
-#       an integer, a list or a dictionary, or a combination of those
-#       The second member is the leftover of parsing, if everything parses correctly this
-#       should be an empty byte string
-def _decode(data):
-    btype = _gettype(data[0])
-    if btype == _TYPE_INT:
-        return _decode_int(data)
-    elif btype == _TYPE_STRING:
-        return _decode_string(data)
-    elif btype == _TYPE_LIST:
-        return _decode_list(data)
-    elif btype == _TYPE_DICTIONARY:
-        return _decode_dict(data)
-    else:
-        return (False, False)
+    def decode_int(self):
+        _start = self.pos
+        _end   = self.data.index(b'e', _start)
 
-# Function to decode bencoded data
-#   Arguments:
-#       data        bencoded data, can be str or bytes
-#   Return Values:
-#       Returns the decoded data on success, this coud be bytes, int, dict or list
-#       or a combinatin of those
-#       If an error occurs the return value is False
-def decode(data):
-    if isinstance(data, str):
-        data = data.encode()
-    decoded, overflow = _decode(data)
-    return decoded
+        if _start == _end:
+            raise DecodingException("Empty integer.")
 
-#   Args: data as integer
-# return: encoded byte string
-def _encode_int(data):
-    return b'i' + str(data).encode() + b'e'
+        self.pos = _end+1
 
-#   Args: data as string or bytes
-# Return: encoded byte string
-def _encode_string(data):
-    return str(len(data)).encode() + b':' + data
+        _int = int(self.data[_start:_end])
 
-#   Args: data as list
-# Return: Encoded byte string, false on error
-def _encode_list(data):
-    elist = b'l'
-    for item in data:
-        eitem = encode(item)
-        if eitem == False:
-            return False
-        elist += eitem
-    return elist + b'e'
+        # strict: forbig leading zeroes and negative zero
+        if self.strict:
+            if bytes(str(_int), "utf-8") != self.data[_start:_end]:
+                raise DecodingException("Leading zeroes or negative zero detected.")
 
-#   Args: data as dict
-# Return: encoded byte string, false on error
-def _encode_dict(data):
-    edict = b'd'
-    keys = []
-    for key in data:
-        if not isinstance(key, str) and not isinstance(key, bytes):
-            return False
-        keys.append(key)
-    keys.sort()
-    for key in keys:
-        ekey  = encode(key)
-        eitem = encode(data[key])
-        if ekey == False or eitem == False:
-            return False
-        edict += ekey + eitem
-    return edict + b'e'
+        return _int
 
-# Function to encode a variable in bencoding
-#   Arguments:
-#       data        Variable to be encoded, can be a list, dict, str, bytes, int or a combination of those
-#   Return Values:
-#       Returns the encoded data as a byte string when successful
-#       If an error occurs the return value is False
-def encode(data):
-    if isinstance(data, bool):
-        return False
-    elif isinstance(data, int):
-        return _encode_int(data)
-    elif isinstance(data, bytes):
-        return _encode_string(data)
-    elif isinstance(data, str):
-        return _encode_string(data.encode())
-    elif isinstance(data, list):
-        return _encode_list(data)
-    elif isinstance(data, dict):
-        return _encode_dict(data)
-    else:
-        return False
+    def decode_list(self):
+        _list = []
+
+        while True:
+            if self.pos_char == b'e':
+                self.pos += 1
+                return _list
+
+            _pos = self.pos
+
+            try:
+                _list.append(self.decode())
+            except DecodingException:
+                # did the exception happen because there is nothing to decode?
+                if _pos == self.pos:
+                    raise DecodingException("Unterminated list (or invalid list contents).")
+                else:
+                    raise
+
+        assert False
+
+    def decode_dict(self):
+        _dict = {}
+
+        while True:
+            if self.pos_char == b'e':
+                self.pos += 1
+                return _dict
+
+            if not self.pos_char.isdigit():
+                raise DecodingException("Invalid dictionary key (must be string).")
+
+            key        = self.decode_string()
+            _dict[key] = self.decode()
+
+        assert False
+
+    def decode_string(self):
+        _start = self.pos
+        _colon = self.data.index(b':', _start)
+        _len   = int(self.data[_start:_colon])
+
+        if _len < 0:
+            raise DecodingException("String with length < 0 found.")
+
+        self.pos = _colon+1+_len
+
+        _res = self.data[_colon+1:_colon+1+_len]
+
+        if self.decode_strings:
+            return _str(_res)
+        else:
+            return _res
+
+
+if __name__ == '__main__':
+    import sys, os
+
+    if len(sys.argv) == 2:
+        file = sys.argv[1]
+
+        if not os.path.isfile(file):
+            print("Error: '%s' is not a valid file." % file)
+            sys.exit(1)
+
+        with open(file, "rb") as fh:
+            from pprint import pprint
+            pprint(bdecode(fh.read()))
+
+        sys.exit(0)
+
+    ##################
+    # RUN UNIT TESTS #
+    import unittest
+
+    class Test(unittest.TestCase):
+        def setUp(self):
+            pass
+
+        def test_complex(self):
+            # Complex tests with a lot of hierarchy in the data.
+            test_data = [{'bar': 'spam', 'foo': 42},
+                         {'foo': ['bar', [42, 'morespam'], 'spam']},
+                         'gedons']
+
+            for data in test_data:
+                self.assertEqual(data, bdecode(bencode(data)))
+
+            # all together
+            self.assertEqual(test_data, bdecode(bencode(test_data)))
+
+        def test_single_ints(self):
+            # Testing with integers only.
+            test_data = [-1337, 0, 1337**2, 2**33]
+            for data in test_data:
+                self.assertEquals(data, bdecode(bencode(data)))
+
+        def test_single_strings_decoding(self):
+            # Testing with strings only, automatic decoding enabled (the default).
+            test_data = ["", "test", "utf8-string: ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¤ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼"]
+            for data in test_data:
+                self.assertEquals(data, bdecode(bencode(data)))
+
+        def test_single_strings_nodecoding(self):
+            # same like above but without internal decoding attempts
+            # (decode_strings = False)
+            test_data = ["", "test", "utf8-string: ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¤ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼"]
+            for data in test_data:
+                self.assertEquals(data,
+                                  bdecode(bencode(data),
+                                          decode_strings=False).decode("utf-8"))
+
+        def test_single_strings_more(self):
+            # decoding b"test" will result in "test" due
+            # to string decoding, which is activated by default
+            self.assertEquals("test",  bdecode(bencode(b"test")))
+
+            # decoding b"test" will result in b"test"
+            # if the string decoding gets disabled explicitly
+            self.assertEquals(b"test", bdecode(bencode(b"test"), decode_strings=False))
+
+            # however, if string decoding gets disabled explicility,
+            # even "test" will not be restored. instead, b"test" will be
+            # returned.
+            self.assertEquals(b"test", bdecode(bencode("test"), decode_strings=False))
+
+        def test_empty_list(self):
+            self.assertEquals([], bdecode(bencode([])))
+
+        def test_empty_dict(self):
+            self.assertEquals({}, bdecode(bencode({})))
+
+        def test_detect_bad_dict_keys(self):
+            with self.assertRaisesRegexp(DecodingException,
+                                         "^Invalid dictionary key"):
+                bdecode(b"di123e4:spame")
+
+        def test_detect_unterminated_list(self):
+            with self.assertRaisesRegexp(DecodingException,
+                                         "^Unexpected end of data"):
+                bdecode(b"li123e")
+
+        def test_detect_empty_integer(self):
+            with self.assertRaisesRegexp(DecodingException,
+                                         "^Empty integer"):
+                bdecode(b"l4:spamiee")
+
+        def test_detect_leading_zeroes(self):
+            # Detect leading zero
+            with self.assertRaisesRegexp(DecodingException,
+                                         "^Leading zeroes"):
+                bdecode(b"i01e", strict=True)
+
+            # Detect leading zero of negative number
+            with self.assertRaisesRegexp(DecodingException,
+                                         "^Leading zeroes"):
+                bdecode(b"i-01e", strict=True)
+
+            # Detect negative zero
+            with self.assertRaisesRegexp(DecodingException,
+                                         "negative zero"):
+                bdecode(b"i-0e", strict=True)
+
+            # However, the zero itself must be accepted...
+            self.assertEquals(0, bdecode(b"i0e", strict=True))
+
+        def test_bad_sized_string(self):
+            with self.assertRaises(DecodingException):
+                bdecode(b"l12:normalstring-5:badstringe")
+
+    unittest.main(testRunner=unittest.TextTestRunner(verbosity=2), exit=False)

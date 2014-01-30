@@ -13,8 +13,8 @@ def from_torrent_data(torrent_contents):
     """
     return a magnet URI given Bittorrent torrent file content
     """
-    metadata = bencode.decode(torrent_contents)
-    hash_contents = bencode.encode(metadata[b'info'])
+    metadata = bencode.bdecode(torrent_contents)
+    hash_contents = bencode.bencode(metadata['info'])
     digest = hashlib.sha1(hash_contents).digest()
     b32hash = base64.b32encode(digest)
     return 'magnet:?xt=urn:btih:%s' % b32hash.decode('ASCII')
