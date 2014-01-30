@@ -7,7 +7,7 @@ from magneturi import from_torrent_file, from_torrent_data
 def usage():
     print(dedent("""usage: magneturi [<torrent file>] [<torrent file>]...
 
-        Generate a manget URI for the given torrent file.
+        Generate a magnet URI for the given torrent file.
         Magneturi can read the torrent file content from stdin.
         """))
 
