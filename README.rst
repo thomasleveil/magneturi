@@ -1,6 +1,9 @@
-***************************************************
-magneturi: generate magnet URI for Bittorrent files
-***************************************************
+*********
+magneturi
+*********
+
+generate magnet URI for Bittorrent files
+
 
 =====
 Usage
@@ -13,3 +16,13 @@ Usage
 
 
 See also ``magneturi --help``.
+
+
+=======
+Install
+=======
+
+.. code-block:: bash
+
+    $ pip3 install magneturi
+
