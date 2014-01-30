@@ -7,7 +7,6 @@ import os
 from magneturi import bencode
 import hashlib
 import base64
-from urllib import parse
 
 
 def from_torrent_data(torrent_contents):
@@ -18,11 +17,7 @@ def from_torrent_data(torrent_contents):
     hash_contents = bencode.encode(metadata[b'info'])
     digest = hashlib.sha1(hash_contents).digest()
     b32hash = base64.b32encode(digest)
-    params = {'xt': 'urn:btih:%s' % b32hash,
-        'dn': metadata[b'info'][b'name'],
-        'tr': metadata[b'announce'],
-        'xl': metadata[b'info'][b'length']}
-    return 'magnet:?%s' % parse.urlencode(params)
+    return 'magnet:?xt=urn:btih:%s' % b32hash.decode('ASCII')
 
 
 def from_torrent_file(torrent_file):
