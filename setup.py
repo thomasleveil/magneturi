@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='magneturi',
-    version='1.2',
+    version='1.3',
     packages=['magneturi'],
     entry_points={
         'console_scripts': [
